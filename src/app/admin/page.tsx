@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { SurveyResponse } from "@/lib/survey";
@@ -109,7 +110,8 @@ export default function AdminPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="flex items-center gap-3">
+          <Image src="/logo.png" alt="Makindye Secondary School logo" width={40} height={40} className="rounded-full" />
           <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Survey results</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             {responses.length} response{responses.length === 1 ? "" : "s"} collected.

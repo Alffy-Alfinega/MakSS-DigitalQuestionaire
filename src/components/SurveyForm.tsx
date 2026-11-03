@@ -240,19 +240,43 @@ export default function SurveyForm({ onSubmitted }: Props) {
   const set = <K extends keyof SurveyAnswers>(k: K, v: SurveyAnswers[K]) =>
     setAnswers((a) => ({ ...a, [k]: v }));
 
+  const getDeviceId = () => {
+    const key = "makss-device-id";
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(key, id);
+      }
+      return id;
+    } catch {
+      return crypto.randomUUID();
+    }
+  };
+
   const submit = async () => {
     setSubmitting(true);
     setError(null);
+    const deviceId = getDeviceId();
     try {
       const res = await fetch("/api/responses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, deviceId }),
       });
+      if (res.status === 409) {
+        try {
+          localStorage.setItem("makss-submitted", "1");
+        } catch {}
+        setError("This device has already submitted the survey. Thank you.");
+        setSubmitting(false);
+        return;
+      }
       if (!res.ok) throw new Error("Server error");
       const data = await res.json();
       try {
         localStorage.removeItem(DRAFT_KEY);
+        localStorage.setItem("makss-submitted", "1");
       } catch {}
       onSubmitted?.(data.id);
     } catch {
@@ -265,6 +289,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
         localStorage.setItem(key, JSON.stringify(list));
         try {
           localStorage.removeItem(DRAFT_KEY);
+          localStorage.setItem("makss-submitted", "1");
         } catch {}
         onSubmitted?.(entry.id);
       } catch {

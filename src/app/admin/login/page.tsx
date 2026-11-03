@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -38,7 +39,10 @@ export default function AdminLoginPage() {
         onSubmit={submit}
         className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
       >
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Admin login</h1>
+        <div className="flex items-center gap-3">
+          <Image src="/logo.png" alt="Makindye Secondary School logo" width={40} height={40} className="rounded-full" />
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">Admin login</h1>
+        </div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           Enter the admin password to view survey results.
         </p>

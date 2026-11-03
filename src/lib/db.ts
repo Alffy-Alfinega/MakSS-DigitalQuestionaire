@@ -47,10 +47,38 @@ export async function insertResponse(answers: unknown) {
   return id;
 }
 
+export async function ensureDevicesTable() {
+  const p = getPool();
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS submitted_devices (
+      device_id TEXT PRIMARY KEY,
+      submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+}
+
+export async function isDeviceSubmitted(deviceId: string): Promise<boolean> {
+  await ensureDevicesTable();
+  const p = getPool();
+  const res = await p.query("SELECT 1 FROM submitted_devices WHERE device_id = $1", [deviceId]);
+  return (res.rowCount ?? 0) > 0;
+}
+
+export async function recordDevice(deviceId: string) {
+  await ensureDevicesTable();
+  const p = getPool();
+  await p.query(
+    "INSERT INTO submitted_devices (device_id) VALUES ($1) ON CONFLICT (device_id) DO NOTHING",
+    [deviceId]
+  );
+}
+
 export async function deleteAllResponses() {
   await ensureTable();
+  await ensureDevicesTable();
   const p = getPool();
   await p.query("DELETE FROM survey_responses");
+  await p.query("DELETE FROM submitted_devices");
 }
 
 export async function ensureAuthTables() {

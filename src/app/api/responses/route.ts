@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getAllResponses, insertResponse, deleteAllResponses, validateSession } from "@/lib/db";
+import { getAllResponses, insertResponse, deleteAllResponses, validateSession, isDeviceSubmitted, recordDevice } from "@/lib/db";
 import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 async function isAdmin() {
@@ -41,11 +41,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
   const answers = (body as { answers?: unknown })?.answers;
+  const deviceId = (body as { deviceId?: unknown })?.deviceId;
   if (!answers || typeof answers !== "object") {
     return NextResponse.json({ error: "Missing answers" }, { status: 400 });
   }
+  if (typeof deviceId === "string" && deviceId) {
+    try {
+      if (await isDeviceSubmitted(deviceId)) {
+        return NextResponse.json({ error: "This device has already submitted the survey." }, { status: 409 });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
   try {
     const id = await insertResponse(answers);
+    if (typeof deviceId === "string" && deviceId) {
+      try {
+        await recordDevice(deviceId);
+      } catch (e) {
+        console.error(e);
+      }
+    }
     return NextResponse.json({ ok: true, id }, { status: 201 });
   } catch (e) {
     console.error(e);
