@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { SurveyResponse } from "@/lib/survey";
 import { SKILL_ITEMS, FACILITY_ITEMS, VIEW_ITEMS } from "@/lib/survey";
 import { useRouter } from "next/navigation";
@@ -40,85 +41,6 @@ function avgFacility(responses: SurveyResponse[]) {
   });
 }
 
-function downloadCSV(responses: SurveyResponse[]) {
-  const headers = [
-    "id",
-    "submittedAt",
-    "q1",
-    "q2",
-    "q3",
-    "q4",
-    "q5",
-    "q6",
-    "q7",
-    "q8",
-    "q9",
-    "q10",
-    "q11",
-    "q12",
-    "q13",
-    "q13Other",
-    "q14",
-    "q15",
-    "q16",
-    "q17",
-    "q18",
-    "q19",
-    "q19Other",
-    "q20",
-    "q21",
-    "q22",
-    "q23",
-    "q24",
-    "q25",
-  ];
-  const rows = responses.map((r) => {
-    const a = r.answers;
-    const cell = (v: unknown) =>
-      `"${String(v ?? "").replace(/"/g, '""').replace(/\n/g, " ")}"`;
-    return [
-      r.id,
-      r.submittedAt,
-      a.q1,
-      a.q2,
-      a.q3,
-      (a.q4 ?? []).join("; "),
-      a.q5,
-      SKILL_ITEMS.map((i) => `${i.key}=${a.q6?.[i.key] ?? ""}`).join("; "),
-      a.q7,
-      (a.q8 ?? []).join("; "),
-      (a.q9 ?? []).join("; "),
-      a.q10,
-      (a.q11 ?? []).join("; "),
-      a.q12,
-      (a.q13 ?? []).join("; "),
-      a.q13Other,
-      FACILITY_ITEMS.map((i) => `${i.key}=${a.q14?.[i.key] ?? ""}`).join("; "),
-      VIEW_ITEMS.map((i) => `${i.key}=${a.q15?.[i.key] ?? ""}`).join("; "),
-      (a.q16 ?? []).join("; "),
-      a.q17,
-      a.q18,
-      (a.q19 ?? []).join("; "),
-      a.q19Other,
-      (a.q20 ?? []).join("; "),
-      (a.q21 ?? []).join("; "),
-      a.q22,
-      a.q23,
-      a.q24,
-      a.q25,
-    ]
-      .map(cell)
-      .join(",");
-  });
-  const csv = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `makss-survey-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 export default function AdminPage() {
   const router = useRouter();
@@ -162,6 +84,7 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (authChecked) load();
   }, [authChecked]);
 
@@ -227,12 +150,12 @@ export default function AdminPage() {
           >
             Logout
           </button>
-          <a
+          <Link
             href="/"
             className="rounded-full border border-zinc-300 px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Home
-          </a>
+          </Link>
         </div>
       </header>
 

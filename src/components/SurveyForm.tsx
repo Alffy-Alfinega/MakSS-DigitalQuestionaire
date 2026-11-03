@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { SurveyAnswers } from "@/lib/survey";
 import {
   SKILL_ITEMS,
@@ -148,6 +148,7 @@ function Matrix({
   onChange,
   allowNA,
   legend,
+  namePrefix = "m",
 }: {
   items: readonly { key: string; label: string }[];
   columns: number[];
@@ -155,9 +156,8 @@ function Matrix({
   onChange: (v: Record<string, string>) => void;
   allowNA?: boolean;
   legend?: string;
+  namePrefix?: string;
 }) {
-  const cols = allowNA ? [...columns, 0] : columns; // 0 represents N/A
-  const naLabel = "N/A";
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -180,7 +180,8 @@ function Matrix({
                 <td key={c} className="px-1 text-center">
                   <input
                     type="radio"
-                    name={`m-${it.key}`}
+                    name={`${namePrefix}-${it.key}`}
+                    value={String(c)}
                     checked={value?.[it.key] === String(c)}
                     onChange={() => onChange({ ...(value ?? {}), [it.key]: String(c) })}
                     className="h-4 w-4 accent-blue-600"
@@ -191,7 +192,8 @@ function Matrix({
                 <td className="px-1 text-center">
                   <input
                     type="radio"
-                    name={`m-${it.key}`}
+                    name={`${namePrefix}-${it.key}`}
+                    value="NA"
                     checked={value?.[it.key] === "NA"}
                     onChange={() => onChange({ ...(value ?? {}), [it.key]: "NA" })}
                     className="h-4 w-4 accent-blue-600"
@@ -221,6 +223,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (raw) setAnswers(JSON.parse(raw));
     } catch {}
     setLoaded(true);
@@ -252,7 +255,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
         localStorage.removeItem(DRAFT_KEY);
       } catch {}
       onSubmitted?.(data.id);
-    } catch (e) {
+    } catch {
       // fallback to local storage
       try {
         const key = "makss-survey-responses";
@@ -425,6 +428,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
           columns={[1, 2, 3, 4, 5]}
           value={answers.q6}
           onChange={(v) => set("q6", v)}
+          namePrefix="q6"
           legend="1 = I cannot do this  2 = only with help  3 = basic, slowly  4 = confident  5 = very confident, I could teach others"
         />
       </Section>
@@ -495,6 +499,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
           columns={[1, 2, 3, 4, 5]}
           value={answers.q14}
           onChange={(v) => set("q14", v)}
+          namePrefix="q14"
           allowNA
           legend="1 = very unreliable  2 = unreliable  3 = sometimes  4 = reliable  5 = very reliable. Use N/A if you do not use it."
         />
@@ -511,6 +516,7 @@ export default function SurveyForm({ onSubmitted }: Props) {
           columns={[1, 2, 3, 4, 5]}
           value={answers.q15}
           onChange={(v) => set("q15", v)}
+          namePrefix="q15"
           legend="1 = strongly disagree  2 = disagree  3 = not sure  4 = agree  5 = strongly agree"
         />
       </Section>

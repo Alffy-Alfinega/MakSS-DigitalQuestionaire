@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getAllResponses, insertResponse, deleteAllResponses, validateSession } from "@/lib/db";
+import { rateLimit, clientKey } from "@/lib/rateLimit";
 
 async function isAdmin() {
   const store = await cookies();
@@ -22,6 +23,17 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const MAX_BYTES = 1024 * 256;
+  const cl = Number(req.headers.get("content-length") ?? 0);
+  if (cl && cl > MAX_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
+  const key = clientKey(req);
+  if (!rateLimit(`submit:${key}`, 20, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many submissions. Try again later." }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
-import { validateSession, getAdminPasswordHash, setAdminPasswordHash } from "@/lib/db";
+import { validateSession, getAdminPasswordHash, setAdminPasswordHash, deleteOtherSessions } from "@/lib/db";
 
 export async function POST(req: Request) {
   const store = await cookies();
@@ -24,5 +24,6 @@ export async function POST(req: Request) {
   }
   const newHash = await bcrypt.hash(next, 10);
   await setAdminPasswordHash(newHash);
+  await deleteOtherSessions(token);
   return NextResponse.json({ ok: true });
 }

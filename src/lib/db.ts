@@ -62,6 +62,7 @@ export async function ensureAuthTables() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+  await p.query("ALTER TABLE admin_credentials ALTER COLUMN id SET DEFAULT gen_random_uuid()");
   await p.query(`
     CREATE TABLE IF NOT EXISTS admin_sessions (
       token TEXT PRIMARY KEY,
@@ -82,7 +83,8 @@ export async function setAdminPasswordHash(hash: string) {
   await ensureAuthTables();
   const p = getPool();
   await p.query("DELETE FROM admin_credentials");
-  await p.query("INSERT INTO admin_credentials (password_hash) VALUES ($1)", [hash]);
+  const id = crypto.randomUUID();
+  await p.query("INSERT INTO admin_credentials (id, password_hash) VALUES ($1, $2)", [id, hash]);
 }
 
 export async function createSession(days = 7): Promise<string> {
@@ -110,4 +112,16 @@ export async function deleteSession(token: string) {
   await ensureAuthTables();
   const p = getPool();
   await p.query("DELETE FROM admin_sessions WHERE token = $1", [token]);
+}
+
+export async function deleteOtherSessions(keepToken: string) {
+  await ensureAuthTables();
+  const p = getPool();
+  await p.query("DELETE FROM admin_sessions WHERE token <> $1", [keepToken]);
+}
+
+export async function deleteAllSessions() {
+  await ensureAuthTables();
+  const p = getPool();
+  await p.query("DELETE FROM admin_sessions");
 }
